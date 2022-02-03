@@ -47,11 +47,11 @@ class UserRepository {
     
     const query = `
     INSERT INTO
-    application_user (username, password)
+      application_user (username, password)
     VALUES
-    ($1, crypt($2, 'my_salt'))
+      ($1, crypt($2, 'my_salt'))
     RETURNING
-    uuid
+      uuid
     `;
     
     const values =  [username, password];
@@ -68,11 +68,12 @@ class UserRepository {
     
     const query = `
     UPDATE
-    application_user
+      application_user
     SET
-    username = $1, 
-    password = crypt($2, 'my_salt')
-    WHERE uuid = $3
+      username = $1, 
+      password = crypt($2, ${process.env.SALT})
+    WHERE
+      uuid = $3
     `;
     
     const values =  [username, password, uuid];
@@ -84,14 +85,42 @@ class UserRepository {
   async deleteUser(uuid: string): Promise<void> {
     const query = `
     DELETE FROM
-    application_user
+      application_user
     WHERE
-    uuid = $1
+      uuid = $1
     `;
     
     const values = [uuid];
     
     await db.query(query, values);
+  }
+
+  //? VERIFY USER
+  async findByUsernameAndPassword(username: string, password: string): Promise<User | null> {
+    try {
+      const query = `
+        SELECT
+          uuid, username
+        FROM
+          application_user
+        WHERE
+          username = $1
+        AND
+          password = crypt($2, '${process.env.SALT}')
+      `;
+  
+      const values = [username, password];
+      
+      const { rows } = await db.query<User>(query, values);
+      
+      const [ user ] = rows;
+  
+      return user || null;
+    }
+    catch (err) {
+      throw new DataBaseError('Erro na consulta por credenciais');
+    }
+    
   }
   
 }
