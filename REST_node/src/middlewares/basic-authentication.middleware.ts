@@ -1,4 +1,3 @@
-import {  } from 'express';
 import { Request, Response, NextFunction } from 'express';
 import ForbiddenError from '../models/errors/forbidden.error.model';
 import userRepository from '../repositorie/user.repository';
